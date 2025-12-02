@@ -1,7 +1,7 @@
 from google.cloud import aiplatform
 import os
 
-PROJECT_ID = os.environ.get("PROJECT_ID", "gamecaster-473118")
+PROJECT_ID = os.environ.get("PROJECT_ID", "your_project_id")
 REGION = os.environ.get("REGION", "us-central1")
 
 aiplatform.init(project=PROJECT_ID, location=REGION)
