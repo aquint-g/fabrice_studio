@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flow - Creative Video Suite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #bb86fc;
+            --secondary-color: #03dac6;
+            --text-color: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --border-color: #333;
+            --timeline-height: 140px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .logo {
+            font-weight: 600;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo span {
+            color: var(--primary-color);
+        }
+
+        /* Main Workspace */
+        .workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Viewer Area */
+        .viewer {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            position: relative;
+        }
+
+        video {
+            max-width: 100%;
+            max-height: calc(100vh - 220px);
+            /* Adjust for header + timeline */
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-state h2 {
+            font-weight: 400;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        /* Timeline Area */
+        .timeline-container {
+            height: var(--timeline-height);
+            background: var(--surface-color);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .timeline-controls {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 16px;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .control-btn.primary {
+            color: var(--primary-color);
+        }
+
+        .timeline-tracks {
+            flex: 1;
+            overflow-x: auto;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 4px;
+        }
+
+        .clip-card {
+            width: 160px;
+            height: 70px;
+            background: #2a2a2a;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s, border-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .clip-card.active {
+            border-color: var(--primary-color);
+        }
+
+        .clip-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .clip-card img,
+        .clip-card video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.8;
+        }
+
+        .clip-card .duration {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+
+        .connector {
+            width: 20px;
+            height: 2px;
+            background: var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .add-clip-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--surface-color);
+            border: 2px dashed var(--text-muted);
+            color: var(--text-muted);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .add-clip-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* Modals / Overlays */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            background: var(--surface-color);
+            padding: 30px;
+            border-radius: 12px;
+            width: 500px;
+            max-width: 90%;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            background: #121212;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: white;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: black;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Loading Animation */
+        .loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Hidden inputs */
+        #fileInput {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Fabrice's <span>Veo Studio</span>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <div class="viewer">
+            <div id="emptyState" class="empty-state">
+                <h2>Start your creation</h2>
+                <p>Add a clip to the timeline to begin</p>
+            </div>
+            <video id="mainPlayer" controls style="display: none;"></video>
+        </div>
+
+        <div class="timeline-container">
+            <div class="timeline-controls">
+                <button class="control-btn primary" onclick="playSequence()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    Play All
+                </button>
+                <div style="flex:1"></div>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Auto-save enabled</span>
+            </div>
+            <div class="timeline-tracks" id="timelineTracks">
+                <!-- Clips will be inserted here -->
+                <div class="add-clip-btn" onclick="openAddModal()" title="Add new clip">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Clip Modal -->
+    <div id="addModal" class="modal-overlay">
+        <div class="modal">
+            <h2 id="modalTitle">Add Clip</h2>
+
+            <div id="uploadStep">
+                <div class="form-group">
+                    <label>Source Material</label>
+                    <button class="btn btn-secondary" style="width:100%"
+                        onclick="document.getElementById('fileInput').click()">
+                        Select Image or Video
+                    </button>
+                    <input type="file" id="fileInput" accept="image/*,video/*" onchange="handleFileSelect(this)">
+                    <p id="fileName" style="margin-top:8px; font-size:0.85rem; color:var(--primary-color);"></p>
+                </div>
+            </div>
+
+            <div id="promptStep" style="display:none;">
+                <div class="form-group">
+                    <label>What happens next?</label>
+                    <textarea id="promptInput" class="form-control" rows="3"
+                        placeholder="Describe the action... (e.g. The camera pans up to reveal a castle)"></textarea>
+                </div>
+            </div>
+
+            <div id="loadingStep" style="display:none;">
+                <div class="loader">
+                    <div class="spinner"></div>
+                    <p>Dreaming up your video...</p>
+                    <small style="color:var(--text-muted)">Analyzing context & generating frames</small>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; margin-top:20px;">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button id="generateBtn" class="btn btn-primary" onclick="generateClip()" disabled>Generate</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let clips = []; // { id, type, url, thumbnail, description, rawFile }
+        let currentClipIndex = -1;
+
+        // DOM Elements
+        const mainPlayer = document.getElementById('mainPlayer');
+        const emptyState = document.getElementById('emptyState');
+        const timelineTracks = document.getElementById('timelineTracks');
+        const addModal = document.getElementById('addModal');
+        const fileInput = document.getElementById('fileInput');
+        const generateBtn = document.getElementById('generateBtn');
+
+        // Init
+        function init() {
+            renderTimeline();
+        }
+
+        // Modal Logic
+        function openAddModal() {
+            // Reset form
+            fileInput.value = '';
+            document.getElementById('fileName').textContent = '';
+            document.getElementById('promptInput').value = '';
+
+            // Show correct steps
+            document.getElementById('uploadStep').style.display = 'block';
+            document.getElementById('promptStep').style.display = 'none';
+            document.getElementById('loadingStep').style.display = 'none';
+            generateBtn.style.display = 'block';
+            generateBtn.disabled = true;
+
+            addModal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            addModal.style.display = 'none';
+        }
+
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                document.getElementById('fileName').textContent = file.name;
+
+                // Show the prompt step now that we have a file
+                document.getElementById('promptStep').style.display = 'block';
+                document.getElementById('promptInput').focus();
+
+                generateBtn.disabled = false;
+            }
+        }
+
+        // Core Logic
+        async function generateClip() {
+            const file = fileInput.files[0];
+            const prompt = document.getElementById('promptInput').value;
+
+            if (!file) return;
+
+            // NEW: If this is the first clip and we uploaded a video, add it to the timeline!
+            if (clips.length === 0 && file.type.startsWith('video/')) {
+                const objectUrl = URL.createObjectURL(file);
+                addClipToTimeline({
+                    url: objectUrl,
+                    thumbnail: null,
+                    description: "Original Upload: " + file.name
+                });
+            }
+
+            // UI Update
+            document.getElementById('uploadStep').style.display = 'none';
+            document.getElementById('promptStep').style.display = 'none';
+            document.getElementById('loadingStep').style.display = 'flex';
+            generateBtn.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('prompt', prompt);
+
+            try {
+                const response = await fetch('/jump_to', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Success
+                    addClipToTimeline({
+                        url: data.video_uri, // The generated video
+                        thumbnail: null, // We could extract one, or just use a placeholder
+                        description: data.gemini_description
+                    });
+                    closeModal();
+                } else {
+                    alert("Error: " + (data.error || "Unknown error"));
+                    closeModal();
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Network error");
+                closeModal();
+            }
+        }
+
+        function addClipToTimeline(clipData) {
+            const newClip = {
+                id: Date.now(),
+                url: clipData.url,
+                description: clipData.description
+            };
+
+            clips.push(newClip);
+            renderTimeline();
+
+            // Auto play the new clip
+            playClip(clips.length - 1);
+        }
+
+        function renderTimeline() {
+            // Clear current tracks (except the add button)
+            const addBtn = timelineTracks.querySelector('.add-clip-btn');
+            timelineTracks.innerHTML = '';
+
+            clips.forEach((clip, index) => {
+                // Create Card
+                const card = document.createElement('div');
+                card.className = `clip-card ${index === currentClipIndex ? 'active' : ''}`;
+                card.onclick = () => playClip(index);
+
+                // Content (Video thumbnail)
+                const video = document.createElement('video');
+                video.src = clip.url;
+                video.muted = true;
+                video.preload = 'metadata';
+                // Seek to 1s to get a thumbnail
+                video.currentTime = 1;
+
+                card.appendChild(video);
+
+                // Duration Badge
+                const badge = document.createElement('div');
+                badge.className = 'duration';
+                badge.textContent = '00:08'; // Veo default
+                card.appendChild(badge);
+
+                timelineTracks.appendChild(card);
+
+                // Connector
+                const connector = document.createElement('div');
+                connector.className = 'connector';
+                timelineTracks.appendChild(connector);
+            });
+
+            // Re-append add button
+            timelineTracks.appendChild(addBtn);
+
+            // Update Empty State
+            if (clips.length > 0) {
+                emptyState.style.display = 'none';
+                mainPlayer.style.display = 'block';
+            }
+        }
+
+        function playClip(index) {
+            if (index < 0 || index >= clips.length) return;
+
+            currentClipIndex = index;
+            const clip = clips[index];
+
+            mainPlayer.src = clip.url;
+            mainPlayer.play();
+
+            renderTimeline(); // Update active state
+        }
+
+        function playSequence() {
+            if (clips.length === 0) return;
+
+            let seqIndex = 0;
+
+            const playNext = () => {
+                if (seqIndex >= clips.length) {
+                    // End of sequence
+                    mainPlayer.removeEventListener('ended', playNext);
+                    return;
+                }
+
+                playClip(seqIndex);
+                seqIndex++;
+            };
+
+            mainPlayer.addEventListener('ended', playNext);
+
+            // Start
+            seqIndex = 0;
+            playNext();
+        }
+
+        // Initial render
+        init();
+
+    </script>
+</body>
+
+</html>

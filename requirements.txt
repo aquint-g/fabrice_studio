@@ -1,0 +1,6 @@
+Flask
+google-cloud-aiplatform
+google-cloud-storage
+Pillow
+opencv-python-headless
+requests
